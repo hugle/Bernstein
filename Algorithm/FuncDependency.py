@@ -1,11 +1,23 @@
 from collections import namedtuple
-from sets import Set
 
 
 class FDList:
 
     def __init__(self):
         self.FDs = []
+
+    def remove_fd(self, fd):
+        """
+        Remove a fd object from FDs list
+        :param fd: The fd object in self
+        """
+        if type(fd) is not FD:
+            raise "The input type is not FD"
+
+        if fd not in self.FDs:
+            raise "The input FD is not in the FDs List"
+
+        self.FDs.remove(fd)
 
     def add_fd(self, fd):
         """
@@ -31,15 +43,18 @@ class FDList:
         """
         return len(self.FDs)
 
-    def get_attributes(self):
+    def get_attributes_set(self):
         """
         Get attributes tuple in the FD list
         :return: The attribute tuple
         """
-        attribtues = ()
+        attributes = set()
 
         for fd in self.FDs:
-            attribtues += fd
+            attributes.update(fd.left_attributes)
+            attributes.update(fd.right_attributes)
+
+        return frozenset(attributes)
 
     def __str__(self):
         """
@@ -65,7 +80,7 @@ class FD(namedtuple('FD', 'left_attributes right_attributes')):
         :param right: The right hand side attributes list
         """
 
-        if type(left) is not Set:
+        if type(left) is not frozenset:
             raise TypeError('Left attribute is not a list object')
 
         for x in left:
@@ -75,7 +90,7 @@ class FD(namedtuple('FD', 'left_attributes right_attributes')):
             if (' ' in x) or ('-' in x) or ('>' in x):
                 raise ValueError('Attribute name must not contain space \'-\' or \'>\'')
 
-        if type(right) is not list:
+        if type(right) is not frozenset:
             raise TypeError('Right attribute is not a list object')
 
         for y in right:

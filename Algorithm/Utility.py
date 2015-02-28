@@ -1,3 +1,4 @@
+import copy
 from FuncDependency import *
 
 def find_minimal_cover(FDs):
@@ -5,21 +6,38 @@ def find_minimal_cover(FDs):
     return min_cover
 
 
-def compute_closure(attr, S):
+def compute_closure(A, S):
     """
+    Compute the closure for the input attributes A = {A1, A2, ...}
 
-    :param attr: A set of attributes
+    :param A: A set of attributes
     :param S: A set of FD's
-    :return:
+    :return: The closure of A
     """
 
-    if type(fd) is not FD:
-        raise TypeError('The first argument is not FD type')
+    if type(A) is not frozenset:
+        raise TypeError('The first argument is not frozenset type')
 
-    if type(fds) is not FDList:
+    if isinstance(S, type(FDList)):
         raise TypeError('The second argument is not FDList type')
 
-    attr_closure = []
+    S_copy = copy.copy(S)
 
+    X = set()
 
-    return attr_closure
+    # By reflexivity
+    X.update(A)
+
+    while S_copy.size():
+        for idx, fd in enumerate(S_copy.get_fds()):
+            B = fd.left_attributes
+            if X >= B:
+                C = fd.right_attributes
+                X.update(C)
+                S_copy.remove_fd(fd)
+                break
+
+            if (idx+1) == S_copy.size():
+                return X
+
+    return X
