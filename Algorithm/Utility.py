@@ -1,4 +1,4 @@
-import copy
+from copy import copy, deepcopy
 from itertools import combinations
 from FuncDependency import *
 
@@ -30,8 +30,8 @@ def find_minimal_cover(S):
 
         for fd in min_cover.get_fds():
 
-            if len(fd) > 1:
-                combination_size = len(fd) - 1
+            if len(fd.left_attributes) > 1:
+                combination_size = len(fd.left_attributes) - 1
 
                 while combination_size > 0:
                     lhs = fd.left_attributes
@@ -54,7 +54,6 @@ def find_minimal_cover(S):
                             is_modified = True
                             break
 
-
                     combination_size -= 1
 
                     if is_modified:
@@ -65,7 +64,7 @@ def find_minimal_cover(S):
 
     # 3. Remove redundant FD
     for fd in min_cover.get_fds():
-        min_cover_copy = copy.copy(min_cover)
+        min_cover_copy = deepcopy(min_cover)
         min_cover_copy.remove_fd(fd)
         X = compute_closure(fd.left_attributes, min_cover_copy)
 
@@ -91,7 +90,7 @@ def compute_closure(A, S):
     if isinstance(S, type(FDList)):
         raise TypeError('The second argument is not FDList type')
 
-    S_copy = copy.copy(S)
+    S_copy = deepcopy(S)
 
     X = set()
 

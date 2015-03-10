@@ -60,4 +60,20 @@ class TestFuncDependency(unittest.TestCase):
         self.assertFalse(frozenset(['A', 'B', 'C']) >= X)
         self.assertTrue(frozenset(['A', 'B', 'C', 'D', 'E']) >= X)
 
+    def test_compute_minimum_cover(self):
+        fds = FDList()
+        fds.add_fd(FD(frozenset(['A']), frozenset(['D'])))
+        fds.add_fd(FD(frozenset(['B', 'C']), frozenset(['A', 'D'])))
+        fds.add_fd(FD(frozenset(['C']), frozenset(['B'])))
+        fds.add_fd(FD(frozenset(['E']), frozenset(['A'])))
+        fds.add_fd(FD(frozenset(['E']), frozenset(['D'])))
 
+        min_cover = find_minimal_cover(fds)
+
+        expected_fds = FDList()
+        expected_fds.add_fd(FD(frozenset(['A']), frozenset(['D'])))
+        expected_fds.add_fd(FD(frozenset(['C']), frozenset(['B'])))
+        expected_fds.add_fd(FD(frozenset(['E']), frozenset(['A'])))
+        expected_fds.add_fd(FD(frozenset(['C']), frozenset(['A'])))
+
+        self.assertEqual(expected_fds.__str__(), min_cover.__str__())
