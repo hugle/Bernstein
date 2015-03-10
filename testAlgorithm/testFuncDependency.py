@@ -130,3 +130,9 @@ class TestFuncDependency(unittest.TestCase):
         fds.add_fd(fd2)
 
         fds.remove_fd(fd3)
+
+    def test_modify_LHS(self):
+        fd = FD(frozenset(['A', 'B']), frozenset(['C']))
+        fd.left_attributes = frozenset(['A'])
+        self.assertEqual(frozenset(['A']), fd.left_attributes)
+
