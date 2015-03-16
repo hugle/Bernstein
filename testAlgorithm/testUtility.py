@@ -98,3 +98,21 @@ class TestFuncDependency(unittest.TestCase):
         expected_fds.add_fd(FD(frozenset(['A', 'E']), frozenset(['F'])))
 
         self.assertEqual(expected_fds.__str__(), min_cover.__str__())
+
+    def test_get_attribute_set(self):
+        fds = FDList()
+        fds.add_fd(FD(frozenset(['A']), frozenset(['B'])))
+        fds.add_fd(FD(frozenset(['A']), frozenset(['C'])))
+        fds.add_fd(FD(frozenset(['B']), frozenset(['C'])))
+        fds.add_fd(FD(frozenset(['B']), frozenset(['D'])))
+        fds.add_fd(FD(frozenset(['D']), frozenset(['B'])))
+        fds.add_fd(FD(frozenset(['A', 'B', 'E']), frozenset(['F'])))
+        fds.add_fd(FD(frozenset(['A', 'E']), frozenset(['D'])))
+
+        attributes = get_fds_attributes(fds)
+        self.assertEqual(set(['A', 'B', 'C', 'D', 'E', 'F']), attributes)
+
+    @unittest.expectedFailure
+    def test_get_attribute_set_wrong_type(self):
+        attributes = get_fds_attributes([])
+        return attributes

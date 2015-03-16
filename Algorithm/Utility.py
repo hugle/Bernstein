@@ -110,3 +110,19 @@ def compute_closure(A, S):
                 return X
 
     return X
+
+
+def get_fds_attributes(fds):
+    """
+    Get attribute set in input functional dependencies
+    :param fds: The input functional dependencies
+    :return: The attribute set
+    """
+    if not isinstance(fds, FDList):
+        raise Exception('The input argument is not FDList')
+    attributes = set()
+    for fd in fds.get_fds():
+        attributes.update(fd.left_attributes)
+        attributes.update(fd.right_attributes)
+
+    return attributes

@@ -128,3 +128,43 @@ class TestBernstein(unittest.TestCase):
 
         self.assertEqual(4, len(relations))
 
+    def test_construct_relations_2(self):
+        algo = Bernstein()
+        fds = FDList()
+        fds.add_fd(FD(frozenset(['A', 'B']), frozenset(['C', 'D'])))
+        fds.add_fd(FD(frozenset(['A']), frozenset(['C', 'D'])))
+
+        algo.compute(fds)
+
+        relations = algo.get_relations()
+
+        Bernstein.print_relations(relations)
+
+        self.assertEqual(1, len(relations))
+
+    def test_build_lossy_table(self):
+        algo = Bernstein()
+        fds = FDList()
+        fds.add_fd(FD(frozenset(['X1', 'X2']), frozenset(['A', 'D'])))
+        fds.add_fd(FD(frozenset(['C', 'D']), frozenset(['X1', 'X2'])))
+        fds.add_fd(FD(frozenset(['A', 'X1']), frozenset(['B'])))
+        fds.add_fd(FD(frozenset(['B', 'X2']), frozenset(['C'])))
+        fds.add_fd(FD(frozenset(['C']), frozenset(['A'])))
+
+        algo.compute(fds)
+
+        attr, table = algo.build_lossy_table(algo.get_relations(), fds)
+
+        print algo.print_lossy_table(attr, table)
+
+    def test_build_lossy_table_2(self):
+        algo = Bernstein()
+        fds = FDList()
+        fds.add_fd(FD(frozenset(['A', 'B']), frozenset(['C', 'D'])))
+        fds.add_fd(FD(frozenset(['A']), frozenset(['C', 'D'])))
+
+        algo.compute(fds)
+
+        attr, table = algo.build_lossy_table(algo.get_relations(), fds)
+
+        print algo.print_lossy_table(attr, table)

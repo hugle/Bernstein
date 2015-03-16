@@ -10,12 +10,12 @@ class Bernstein(object):
         """
         Constructor
         """
-        self.G = None   # the original fds
-        self.H = None
-        self.partitioned_fds_list = None
-        self.merged_fds_list = None
-        self.final_fds_list = None
-        self.relations = None
+        self.__G = None   # the original fds
+        self.__H = None
+        self.__partitioned_fds_list = None
+        self.__merged_fds_list = None
+        self.__final_fds_list = None
+        self.__relations = None
 
     def compute(self, G):
         """
@@ -23,27 +23,65 @@ class Bernstein(object):
         :param G: The input functinoal dependencies
         :return: None
         """
-        self.G = G
-        self.H = find_minimal_cover(self.G)
-        self.partitioned_fds_list = self.partition(self.H)
-        self.merged_fds_list = self.merge_keys(self.partitioned_fds_list, self.H)
-        self.final_fds_list = self.eliminate_transitive_fds(self.merged_fds_list, self.H)
-        self.relations = self.construct_relations(self.final_fds_list)
+        self.__G = G
+        self.__H = find_minimal_cover(self.__G)
+        self.__partitioned_fds_list = self.partition(self.__H)
+        self.__merged_fds_list = self.merge_keys(self.__partitioned_fds_list, self.__H)
+        self.__final_fds_list = self.eliminate_transitive_fds(self.__merged_fds_list, self.__H)
+        self.__relations = self.construct_relations(self.__final_fds_list)
 
     def get_minimum_cover(self):
-        return self.H
+        return self.__H
 
     def get_partitioned_fd_lists(self):
-        return self.partitioned_fds_list
+        return self.__partitioned_fds_list
 
     def get_merged_fd_lists(self):
-        return self.merged_fds_list
+        return self.__merged_fds_list
 
     def get_final_fds_lists(self):
-        return self.final_fds_list
+        return self.__final_fds_list
 
     def get_relations(self):
-        return self.relations
+        return self.__relations
+
+    @staticmethod
+    def print_lossy_table(attributes, table):
+        """
+        Print lossy table
+        :param table: The row list
+        :param attributes: The full attributes list
+        :return: True is it is lossless
+        """
+        column_names = ['Schema'] + attributes
+        printable_list = []
+
+        for row in table:
+            printable_row = []
+            printable_row.append(row[0])
+            check_row = row[1]
+            for a in attributes:
+                printable_row.append(check_row[a])
+            printable_list.append(printable_row)
+
+        print tabulate(printable_list, column_names)
+
+        lossless = False
+        for row in table:
+            check_row = row[1]
+
+            valid = True
+            for a in attributes:
+                if not check_row[a]:
+                    valid = False
+                    break
+            if valid:
+                lossless = True
+                break
+
+        return lossless
+
+
 
     @staticmethod
     def print_relations(relations):
@@ -184,13 +222,45 @@ class Bernstein(object):
         return relations
 
     @staticmethod
-    def check_lossy(relations, G):
+    def build_lossy_table(relations, G):
         """
 
         :param relations:
         :param G:
         :return: the resulting table and flag which indicate yes or no
         """
+        all_attr = list(get_fds_attributes(G))
+        table = []
 
-        return False
+        for rel in relations:
+            key_list = rel['key']
+            attr_set = rel['attr']
+            rel_attr = set()
+            rel_attr.update(attr_set)
+            for key in key_list:
+                rel_attr.update(key)
 
+            check_row = {}
+            for attr in all_attr:
+                check_row[attr] = False
+
+            for attr in rel_attr:
+                check_row[attr] = True
+
+            table.append((list(rel_attr), check_row))
+
+        for fd in G.get_fds():
+            left = fd.left_attributes
+            right = fd.right_attributes
+            for row in table:
+                check_row = row[1]
+                valid = True   # check update condition satisfied
+                for a in left:
+                    if not check_row[a]:
+                        valid = False
+
+                if valid:
+                    for a in right:
+                        check_row[a] = True
+
+        return all_attr, table
