@@ -77,3 +77,24 @@ class TestFuncDependency(unittest.TestCase):
         expected_fds.add_fd(FD(frozenset(['C']), frozenset(['A'])))
 
         self.assertEqual(expected_fds.__str__(), min_cover.__str__())
+
+    def test_compute_minimum_cover2(self):
+        fds = FDList()
+        fds.add_fd(FD(frozenset(['A']), frozenset(['B'])))
+        fds.add_fd(FD(frozenset(['A']), frozenset(['C'])))
+        fds.add_fd(FD(frozenset(['B']), frozenset(['C'])))
+        fds.add_fd(FD(frozenset(['B']), frozenset(['D'])))
+        fds.add_fd(FD(frozenset(['D']), frozenset(['B'])))
+        fds.add_fd(FD(frozenset(['A', 'B', 'E']), frozenset(['F'])))
+        fds.add_fd(FD(frozenset(['A', 'E']), frozenset(['D'])))
+
+        min_cover = find_minimal_cover(fds)
+
+        expected_fds = FDList()
+        expected_fds.add_fd(FD(frozenset(['A']), frozenset(['B'])))
+        expected_fds.add_fd(FD(frozenset(['B']), frozenset(['C'])))
+        expected_fds.add_fd(FD(frozenset(['B']), frozenset(['D'])))
+        expected_fds.add_fd(FD(frozenset(['D']), frozenset(['B'])))
+        expected_fds.add_fd(FD(frozenset(['A', 'E']), frozenset(['F'])))
+
+        self.assertEqual(expected_fds.__str__(), min_cover.__str__())

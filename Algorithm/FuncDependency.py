@@ -1,4 +1,5 @@
 from collections import namedtuple
+from copy import deepcopy
 
 
 class FDList:
@@ -67,6 +68,53 @@ class FDList:
 
         return msg
 
+    def __sub__(self, other):
+        """
+        C = A - B, where A, B, C are FDLists,
+        Define subtraction for set difference
+        :param other: FDList B
+        :return: New FDList C by subtracting fd in A that are also in B
+        """
+        if not isinstance(other, FDList):
+            raise Exception('The type in right hand side of minus sign is not FDList type')
+
+        C = deepcopy(self)
+
+        for B_fd in other.get_fds():
+            found = False
+            for A_fd in self.FDs:
+                if A_fd.left_attributes == B_fd.left_attributes \
+                        and A_fd.right_attributes == B_fd.right_attributes:
+                    found = True
+                    break
+            if found:
+                C.remove_fd(A_fd)
+
+        return C
+
+    def __add__(self, other):
+        """
+        C = A + B, where A, B, C are FDLists,
+        Define addition for union functional dependencies
+        :param other: FDList B
+        :return: The union of A and B
+        """
+        if not isinstance(other, FDList):
+            raise Exception('The type in right hand side of minus sign is not FDList type')
+
+        C = deepcopy(self)
+
+        for B_fd in other.get_fds():
+            found = False
+            for A_fd in self.FDs:
+                if A_fd.left_attributes == B_fd.left_attributes \
+                        and A_fd.right_attributes == B_fd.right_attributes:
+                    found = True
+                    break
+            if not found:
+                C.add_fd(B_fd)
+
+        return C
 
 class FD(namedtuple('FD', 'left_attributes right_attributes')):
 

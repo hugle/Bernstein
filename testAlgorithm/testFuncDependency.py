@@ -131,8 +131,78 @@ class TestFuncDependency(unittest.TestCase):
 
         fds.remove_fd(fd3)
 
+    @unittest.expectedFailure
     def test_modify_LHS(self):
+        # namedtuple is immutable
         fd = FD(frozenset(['A', 'B']), frozenset(['C']))
         fd.left_attributes = frozenset(['A'])
         self.assertEqual(frozenset(['A']), fd.left_attributes)
 
+
+    @unittest.expectedFailure
+    def test_subtract_failed(self):
+        fds1 = FDList()
+        fds2 = FDList()
+        fd1 = FD(frozenset(['A', 'B']), frozenset(['C']))
+        fds1.add_fd(fd1)
+        fd2 = FD(frozenset(['A', 'D']), frozenset(['E']))
+        fd3 = FD(frozenset(['A', 'D']), frozenset(['K']))
+        fds2.add_fd(fd2)
+        fds2.add_fd(fd3)
+
+        result = fds1 - fd2
+        return result
+
+    @unittest.expectedFailure
+    def test_add_failed(self):
+        fds1 = FDList()
+        fds2 = FDList()
+        fd1 = FD(frozenset(['A', 'B']), frozenset(['C']))
+        fds1.add_fd(fd1)
+        fd2 = FD(frozenset(['A', 'D']), frozenset(['E']))
+        fd3 = FD(frozenset(['A', 'D']), frozenset(['K']))
+        fds2.add_fd(fd2)
+        fds2.add_fd(fd3)
+
+        result = fds1 + fd2
+        return result
+
+    def test_add(self):
+        fds1 = FDList()
+        fds2 = FDList()
+        fd1 = FD(frozenset(['A', 'B']), frozenset(['C']))
+        fds1.add_fd(fd1)
+        fd2 = FD(frozenset(['A', 'D']), frozenset(['E']))
+        fd3 = FD(frozenset(['A', 'D']), frozenset(['K']))
+        fd4 = FD(frozenset(['A', 'B']), frozenset(['C']))
+        fds2.add_fd(fd2)
+        fds2.add_fd(fd3)
+        fds2.add_fd(fd4)
+
+        expected = FDList()
+        expected.add_fd(fd1)
+        expected.add_fd(fd2)
+        expected.add_fd(fd3)
+
+        result = fds1 + fds2
+
+        self.assertEqual(expected.__str__(), result.__str__())
+
+    def test_subtract(self):
+        fds1 = FDList()
+        fds2 = FDList()
+        fd1 = FD(frozenset(['A', 'B']), frozenset(['C']))
+        fd2 = FD(frozenset(['A', 'D']), frozenset(['E']))
+        fds1.add_fd(fd1)
+        fds1.add_fd(fd2)
+        fd3 = FD(frozenset(['A', 'D']), frozenset(['K']))
+        fd4 = FD(frozenset(['A', 'B']), frozenset(['C']))
+        fds2.add_fd(fd3)
+        fds2.add_fd(fd4)
+
+        expected = FDList()
+        expected.add_fd(fd2)
+
+        result = fds1 - fds2
+
+        self.assertEqual(expected.__str__(), result.__str__())
