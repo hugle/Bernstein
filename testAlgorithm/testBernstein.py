@@ -242,3 +242,30 @@ class TestBernstein(unittest.TestCase):
         else:
             print 'The table below is lossless'
         print info
+
+    # test for shortcoming 4
+    def test_shortcomming_4(self):
+        algo = Bernstein()
+        fds = FDList()
+        fds.add_fd(FD(frozenset(['A', 'D']), frozenset(['B'])))
+        fds.add_fd(FD(frozenset(['B']), frozenset(['C'])))
+        fds.add_fd(FD(frozenset(['C']), frozenset(['D'])))
+        fds.add_fd(FD(frozenset(['A', 'B']), frozenset(['E'])))
+        fds.add_fd(FD(frozenset(['A', 'C']), frozenset(['F'])))
+        fds.add_fd(FD(frozenset(['A', 'D']), frozenset(['F'])))
+        fds.add_fd(FD(frozenset(['A', 'C']), frozenset(['E'])))
+
+        algo.compute(fds)
+
+        for fds in algo.get_merged_fd_lists():
+            if isinstance(fds, tuple):
+                print fds[0]
+                print fds[1]
+            else:
+                print fds
+
+        # error in remove transitive fds
+        #for fds in algo.get_final_fds_lists():
+            #print fds
+
+        print algo.get_print_relations_info(algo.get_relations())

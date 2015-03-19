@@ -99,6 +99,20 @@ class TestFuncDependency(unittest.TestCase):
 
         self.assertEqual(expected_fds.__str__(), min_cover.__str__())
 
+    def test_compute_min_cover_3(self):
+        fds = FDList()
+        fds.add_fd(FD(frozenset(['A', 'D']), frozenset(['B'])))
+        fds.add_fd(FD(frozenset(['B']), frozenset(['C'])))
+        fds.add_fd(FD(frozenset(['C']), frozenset(['D'])))
+        fds.add_fd(FD(frozenset(['A', 'B']), frozenset(['E'])))
+        fds.add_fd(FD(frozenset(['A', 'C']), frozenset(['F'])))
+        fds.add_fd(FD(frozenset(['A', 'D']), frozenset(['F'])))
+        fds.add_fd(FD(frozenset(['A', 'C']), frozenset(['E'])))
+
+        min_cover = find_minimal_cover(fds)
+
+        print min_cover
+
     def test_get_attribute_set(self):
         fds = FDList()
         fds.add_fd(FD(frozenset(['A']), frozenset(['B'])))
