@@ -16,6 +16,8 @@ class Bernstein(object):
         self.__merged_fds_list = None
         self.__final_fds_list = None
         self.__relations = None
+        self.__pnp_table = None
+        self.__all_keys = None
 
     def compute(self, G):
         """
@@ -29,6 +31,8 @@ class Bernstein(object):
         self.__merged_fds_list = self.merge_keys(self.__partitioned_fds_list, self.__H)
         self.__final_fds_list = self.eliminate_transitive_fds(self.__merged_fds_list, self.__H)
         self.__relations = self.construct_relations(self.__final_fds_list)
+        self.__pnp_table = self.find_p_np_table(self.__G)
+        self.__all_keys = self.find_all_keys_based_on_prime_table(self.__pnp_table, self.__G)
 
     def get_minimum_cover(self):
         return self.__H
@@ -45,8 +49,14 @@ class Bernstein(object):
     def get_relations(self):
         return self.__relations
 
+    def get_p_np_table(self):
+        return self.__pnp_table
+
+    def get_all_keys(self):
+        return self.__all_keys
+
     @staticmethod
-    def print_lossy_table(attributes, table):
+    def check_print_lossy_table(attributes, table):
         """
         Print lossy table
         :param table: The row list
@@ -64,7 +74,7 @@ class Bernstein(object):
                 printable_row.append(check_row[a])
             printable_list.append(printable_row)
 
-        print tabulate(printable_list, column_names)
+        information = tabulate(printable_list, column_names)
 
         lossless = False
         for row in table:
@@ -79,18 +89,37 @@ class Bernstein(object):
                 lossless = True
                 break
 
-        return lossless
-
-
+        return lossless, information
 
     @staticmethod
-    def print_relations(relations):
+    def get_print_relations_info(relations):
         printable_list = []
         for idx, rel in enumerate(relations):
             rel_name = 'R%d'%idx
             printable_list.append([rel_name, rel['key'], rel['attr']])
 
-        print tabulate(printable_list, ['Relation', 'Keys', 'Attributes'])
+        info = tabulate(printable_list, ['Relation', 'Keys', 'Attributes'])
+        return info
+
+    @staticmethod
+    def get_print_n_np_table_info(table):
+        """
+        Print the table for computing prime and non-prime
+        :param table: The dict contains key 'Left', 'Middle', 'Right'
+        :return: None
+        """
+        if not isinstance(table, dict):
+            raise Exception('The input table is not dict')
+
+        column_names = ['Left', 'Middle', 'Right']
+        printable_list = [table['Left'], table['Middle'], table['Right']]
+        info = tabulate([printable_list], column_names)
+        return info
+
+    @staticmethod
+    def get_print_all_keys_info(keys):
+        info = tabulate(keys)
+        return info
 
     @staticmethod
     def partition(fds):
@@ -264,3 +293,147 @@ class Bernstein(object):
                         check_row[a] = True
 
         return all_attr, table
+
+    @staticmethod
+    def find_p_np_table(fds):
+        """
+        Find Prime and None-Prime table
+        :param fds: The input functional dependencies
+        :return: The resulting table
+        """
+        table = {'Left': [], 'Middle': [], 'Right': []}
+        attributes = get_fds_attributes(fds)
+        for attr in attributes:
+            exist_left = False
+            exist_right = False
+            for fd in fds.get_fds():
+                if set([attr]) <= fd.left_attributes:
+                    exist_left = True
+                if set([attr]) <= fd.right_attributes:
+                    exist_right = True
+
+                if exist_left and exist_right:
+                    break
+
+            if exist_left and not exist_right:
+                table['Left'].append(attr)
+            elif not exist_left and exist_right:
+                table['Right'].append(attr)
+            elif exist_left and exist_right:
+                table['Middle'].append(attr)
+
+        return table
+
+    @staticmethod
+    def find_all_keys_based_on_prime_table(p_np_table, G):
+        """
+        Find all keys, but not including superkeys
+        :param p_np_table: The left, middle and right table
+        :param G: The original dependencies
+        :return: Set of keys including explicit and hidden
+        """
+        if not isinstance(p_np_table, dict):
+            raise Exception('The input p_np_table is not dict')
+
+        if not isinstance(G, FDList):
+            raise Exception('The input G is not a instance of FDList')
+
+        all_keys = []
+
+        left_list = p_np_table['Left']
+        middle_list = p_np_table['Middle']
+
+        # Get full set of attributes in fds
+        A = get_fds_attributes(G)
+
+        # For left side
+        left_size = len(left_list)
+        combination_size = 0
+        while combination_size <= left_size:
+            combination_size += 1
+            for s in combinations(left_list, combination_size):
+                found_key = [key for key in all_keys if key <= frozenset(s)]
+                if len(found_key) == 0:
+                    s_closure = compute_closure(frozenset(s), G)
+                    if s_closure == A and frozenset(s) not in all_keys:
+                        all_keys.append(frozenset(s))
+                else:
+                    continue
+
+        # For middle attributes with fixed left attributes
+        middle_size = len(middle_list)
+        combination_size = 0
+        while combination_size <= middle_size:
+            combination_size += 1
+            for s in combinations(middle_list, combination_size):
+                com_s = list(s) + left_list
+                found_key = [key for key in all_keys if key <= frozenset(com_s)]
+                if len(found_key) == 0:
+                    s_closure = compute_closure(frozenset(com_s), G)
+                    if s_closure == A and frozenset(com_s) not in all_keys:
+                        all_keys.append(frozenset(com_s))
+                else:
+                    continue
+
+        return all_keys
+
+    @staticmethod
+    def superfluous_attribute_detection_algorithm(relations, G, test_relation, test_attribute):
+
+        if not isinstance(test_relation, dict):
+            raise Exception('test_relation is not dict')
+
+        if not isinstance(test_attribute, set):
+            raise Exception('test_attribute is not set')
+
+        if len(test_attribute) != 1:
+            raise Exception('test_attribute must have only one attribute')
+
+        if not isinstance(relations, list):
+            raise Exception('relations must be a list')
+
+        if not isinstance(G, FDList):
+            raise Exception('G must be a instance of FDList')
+
+        # compute attribute set in test_relation
+        A = get_all_attributes_in_relation(test_relation)
+
+        # test attribute must in test relation
+        if not test_attribute <= A:
+            raise Exception('test_attribute must be subset of test_relation')
+
+        # whether test_attribute is superfluous in test_relation
+        # Step 1
+        all_keys = get_all_keys_in_relation(test_relation)
+
+        Ki_prime = deepcopy(all_keys)
+
+        for key in all_keys:
+            if test_attribute <= key:
+                Ki_prime.remove(key)
+
+        print Ki_prime
+
+        # Step 1.1
+        Gi_prime = FDList()
+
+        # construct test relation(k -> A - k - test_attribute)
+        test_relation_keys = test_relation['key']
+
+        for k in test_relation_keys:
+            Gi_prime.add_fd(FD(k, frozenset(A - k - test_attribute)))
+
+        for rel in relations:
+            if rel is not test_relation:
+                A_i = get_all_attributes_in_relation(rel)
+                for k in rel['key']:
+                    Gi_prime.add_fd(FD(k, frozenset(A_i - k)))
+
+        print Gi_prime
+
+        # Step 2
+        if len(Ki_prime) == 0:
+            return False
+        else:
+            for k in Ki_prime:
+                pass

@@ -124,7 +124,7 @@ class TestBernstein(unittest.TestCase):
 
         relations = algo.get_relations()
 
-        Bernstein.print_relations(relations)
+        print Bernstein.get_print_relations_info(relations)
 
         self.assertEqual(4, len(relations))
 
@@ -138,7 +138,7 @@ class TestBernstein(unittest.TestCase):
 
         relations = algo.get_relations()
 
-        Bernstein.print_relations(relations)
+        print Bernstein.get_print_relations_info(relations)
 
         self.assertEqual(1, len(relations))
 
@@ -155,7 +155,63 @@ class TestBernstein(unittest.TestCase):
 
         attr, table = algo.build_lossy_table(algo.get_relations(), fds)
 
-        print algo.print_lossy_table(attr, table)
+        is_lossless, info = algo.check_print_lossy_table(attr, table)
+        print info
+
+    def test_print_n_np_table(self):
+        algo = Bernstein()
+        fds = FDList()
+        fds.add_fd(FD(frozenset(['X1', 'X2']), frozenset(['A', 'D'])))
+        fds.add_fd(FD(frozenset(['C', 'D']), frozenset(['X1', 'X2'])))
+        fds.add_fd(FD(frozenset(['A', 'X1']), frozenset(['B'])))
+        fds.add_fd(FD(frozenset(['B', 'X2']), frozenset(['C'])))
+        fds.add_fd(FD(frozenset(['C']), frozenset(['A'])))
+
+        algo.compute(fds)
+        print algo.get_print_n_np_table_info(algo.get_p_np_table())
+
+    def test_find_all_keys_based_on_prime_table(self):
+        algo = Bernstein()
+        fds = FDList()
+        fds.add_fd(FD(frozenset(['X1', 'X2']), frozenset(['A', 'D'])))
+        fds.add_fd(FD(frozenset(['C', 'D']), frozenset(['X1', 'X2'])))
+        fds.add_fd(FD(frozenset(['A', 'X1']), frozenset(['B'])))
+        fds.add_fd(FD(frozenset(['B', 'X2']), frozenset(['C'])))
+        fds.add_fd(FD(frozenset(['C']), frozenset(['A'])))
+
+        algo.compute(fds)
+
+        print algo.get_print_all_keys_info(algo.get_all_keys())
+
+    def test_find_all_keys_based_on_prime_table2(self):
+        algo = Bernstein()
+        fds = FDList()
+        fds.add_fd(FD(frozenset(['A', 'B']), frozenset(['C', 'D'])))
+        fds.add_fd(FD(frozenset(['C']), frozenset(['B'])))
+
+        algo.compute(fds)
+
+        print algo.get_print_all_keys_info(algo.get_all_keys())
+
+    def test_superfluous_attribute_detection_algorithm(self):
+        relation1 = {'key': [frozenset(['A'])], 'attr': set(['B', 'C'])}
+        relation2 = {'key': [frozenset(['B'])], 'attr': set(['C'])}
+
+        relations = [relation1, relation2]
+
+        # TODO
+        fds = FDList()
+        fds.add_fd(FD(frozenset(['A']), frozenset(['B', 'C'])))
+        fds.add_fd(FD(frozenset(['B']), frozenset(['C'])))
+
+        test_relation = relation1
+        test_attribute = set('C')
+
+        print '--------------------------------------------------------------------------------'
+        print 'For superfluous detection algorithm'
+        Bernstein.superfluous_attribute_detection_algorithm(relations, fds, test_relation, test_attribute)
+        print '--------------------------------------------------------------------------------'
+
 
     def test_build_lossy_table_2(self):
         algo = Bernstein()
@@ -166,5 +222,23 @@ class TestBernstein(unittest.TestCase):
         algo.compute(fds)
 
         attr, table = algo.build_lossy_table(algo.get_relations(), fds)
+        is_lossless, info = algo.check_print_lossy_table(attr, table)
+        if not is_lossless:
+            print 'The table below is not lossless'
+        else:
+            print 'The table below is lossless'
+        print info
 
-        print algo.print_lossy_table(attr, table)
+        if not is_lossless:
+            new_relations = deepcopy(algo.get_relations())
+            first_key = algo.get_all_keys()[0]
+            new_rel = {'key':first_key, 'attr':set([])}
+            new_relations.append(new_rel)
+
+        attr, table = algo.build_lossy_table(new_relations, fds)
+        is_lossless, info = algo.check_print_lossy_table(attr, table)
+        if not is_lossless:
+            print 'The table below is not lossless'
+        else:
+            print 'The table below is lossless'
+        print info

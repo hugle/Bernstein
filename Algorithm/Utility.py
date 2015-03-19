@@ -1,4 +1,3 @@
-from copy import copy, deepcopy
 from itertools import combinations
 from FuncDependency import *
 
@@ -126,3 +125,58 @@ def get_fds_attributes(fds):
         attributes.update(fd.right_attributes)
 
     return attributes
+
+
+def get_all_keys_in_relation(relation):
+    """
+    Get all the keys and superkeys in relation
+    :param relation: The relation dictionary
+    :return: The list of key set
+    """
+    if not isinstance(relation, dict):
+        raise Exception('The input relation is not dict which contains key and attr')
+
+    keys = relation['key']
+
+    if len(keys) < 1:
+        raise Exception('No key in the relation')
+
+    all_attribute = get_all_attributes_in_relation(relation)
+
+    key_plus = []
+
+    for key in keys:
+        key_plus.append(key)
+        non_key_attribute = all_attribute - key
+        combination_size = len(non_key_attribute)
+        while combination_size:
+            for attr in combinations(non_key_attribute, combination_size):
+                temp_k = key | set(attr)
+                if temp_k not in key_plus:
+                    key_plus.append(temp_k)
+            combination_size -= 1
+
+    return key_plus
+
+def get_all_attributes_in_relation(relation):
+    """
+    Get all the attribute set in relation
+    :param relation: The relation dict
+    :return: The full attribute set
+    """
+    if not isinstance(relation, dict):
+        raise Exception('The input relation is not dict which contains key and attr')
+
+    R = set()
+    keys = relation['key']
+    attrs = relation['attr']
+
+    for key in keys:
+        R.update(key)
+    R.update(attrs)
+
+    return R
+
+
+
+

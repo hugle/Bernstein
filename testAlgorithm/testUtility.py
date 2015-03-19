@@ -116,3 +116,14 @@ class TestFuncDependency(unittest.TestCase):
     def test_get_attribute_set_wrong_type(self):
         attributes = get_fds_attributes([])
         return attributes
+
+    def test_get_all_attributes_in_relation(self):
+        relation = {'key': [frozenset(['X2', 'X1']), frozenset(['C', 'D'])], 'attr': set(['B'])}
+        self.assertEqual(set(['X2', 'X1', 'C', 'D', 'B']), get_all_attributes_in_relation(relation))
+
+    def test_superfluous_attribute_detection_algorithm(self):
+        relation1 = {'key': [frozenset(['X1']), frozenset(['C', 'D'])], 'attr': set(['B'])}
+        relation2 = {'key': [frozenset(['C', 'D'])], 'attr': set(['B', 'X1'])}
+        self.assertEqual(10, len(get_all_keys_in_relation(relation1)))
+        self.assertEqual(4, len(get_all_keys_in_relation(relation2)))
+

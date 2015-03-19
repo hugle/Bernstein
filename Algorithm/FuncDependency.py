@@ -139,7 +139,7 @@ class FD(namedtuple('FD', 'left_attributes right_attributes')):
                 raise ValueError('Attribute name must not contain space \'-\' or \'>\'')
 
         if type(right) is not frozenset:
-            raise TypeError('Right attribute is not a list object')
+            raise TypeError('Right attribute is not a frozenset object')
 
         for y in right:
             if type(y) is not str:
