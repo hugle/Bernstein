@@ -29,7 +29,7 @@ class Bernstein(object):
         self.__H = find_minimal_cover(self.__G)
         self.__partitioned_fds_list = self.partition(self.__H)
         self.__merged_fds_list = self.merge_keys(self.__partitioned_fds_list, self.__H)
-        self.__final_fds_list = self.eliminate_transitive_fds(self.__merged_fds_list, self.__H)
+        self.__final_fds_list = self.eliminate_transitive_fds(self.__merged_fds_list)
         self.__relations = self.construct_relations(self.__final_fds_list)
         self.__pnp_table = self.find_p_np_table(self.__G)
         self.__all_keys = self.find_all_keys_based_on_prime_table(self.__pnp_table, self.__G)
@@ -154,12 +154,13 @@ class Bernstein(object):
         :param H: The minimum cover
         :return: A merged fds list
         """
-        new_fds_list = []
+        new_fds_group = []
         fds_list_copy = deepcopy(fds_list)
         while len(fds_list_copy):
             found = False
             # get left common attribute
             left_attribute = fds_list_copy[0].get_fds()[0].left_attributes
+            # The fds that is being checking
             check_fds = fds_list_copy[0]
             fds_list_copy.remove(fds_list_copy[0])   # Remove X
             # compute closure
@@ -181,18 +182,18 @@ class Bernstein(object):
                             J.add_fd(fd)
 
                         # merge (merged fds, J)
-                        new_fds_list.append((check_fds + fds - J, J))
+                        new_fds_group.append((check_fds + fds - J, J))
                         fds_list_copy.remove(fds)   # remove Y
                         found = True
                         break
 
             if not found:
-                new_fds_list.append(check_fds)
+                new_fds_group.append(check_fds)
 
-        return new_fds_list
+        return new_fds_group
 
     @staticmethod
-    def eliminate_transitive_fds(fds_list, H):
+    def eliminate_transitive_fds(fds_list):
         """
         Eliminate transitive fds by checking each groups of
         functional dependencies H_i
@@ -203,19 +204,44 @@ class Bernstein(object):
         :return: The new fds groups by adding J to corresponding group
         """
         new_fds_lists = []
+        removed_fd = FDList()
         for idx, item in enumerate(fds_list):
             if type(item) is tuple:
                 # Do checking transitive
                 check_fds = item[0]
                 check_fds_copy = deepcopy(item[0])
+                J = item[1].get_fds()
                 for fd in check_fds.get_fds():
-                    left_closure = compute_closure(fd.left_attributes, H)
+                    # construct new H
+                    new_H = get_all_fds_from_merged_fds_list(fds_list)
+                    for f in removed_fd.get_fds():
+                        new_H.remove_fd(f)
+                    new_H.remove_fd(fd) # remove this testing fd
+                    # construct new H end
+
+                    left_closure = compute_closure(fd.left_attributes, new_H)
                     if fd.right_attributes <= left_closure:
-                        # found transitive fd
-                        check_fds_copy.remove_fd(fd)
+                        # Check whether C -> A, if found, not transitive fd
+                        found = False
+                        for f in new_H.get_fds():
+                            temp_left = f.left_attributes
+                            if temp_left <= left_closure - fd.right_attributes - fd.left_attributes:
+                                test_closure = compute_closure(temp_left, new_H)
+                                # core checking transitive definition
+                                if (not fd.left_attributes <= test_closure) and test_closure >= fd.right_attributes:
+                                    found = True
+                                    break
+
+                        if found:
+                            # found transitive fd
+                            removed_fd.add_fd(fd)
+                            check_fds_copy.remove_fd(fd)
+                    else:
+                        # the fd can't be removed
+                        continue
 
                 # merge J to this fds
-                for fd in item[1].get_fds():
+                for fd in J:
                     check_fds_copy.add_fd(fd)
 
                 new_fds_lists.append(check_fds_copy)
@@ -395,6 +421,8 @@ class Bernstein(object):
         if not isinstance(G, FDList):
             raise Exception('G must be a instance of FDList')
 
+        isSuperfluous = True
+
         # compute attribute set in test_relation
         A = get_all_attributes_in_relation(test_relation)
 
@@ -412,8 +440,6 @@ class Bernstein(object):
             if test_attribute <= key:
                 Ki_prime.remove(key)
 
-        print Ki_prime
-
         # Step 1.1
         Gi_prime = FDList()
 
@@ -429,11 +455,62 @@ class Bernstein(object):
                 for k in rel['key']:
                     Gi_prime.add_fd(FD(k, frozenset(A_i - k)))
 
-        print Gi_prime
-
         # Step 2
         if len(Ki_prime) == 0:
-            return False
+            print '---------------------------------'
+            print test_attribute, ' is not superfluous.'
+            print '---------------------------------'
+            isSuperfluous = False
+            return isSuperfluous
         else:
+            go_step3 = False
             for k in Ki_prime:
-                pass
+                k_closure = compute_closure(k, Gi_prime)
+                if test_attribute <= k_closure:
+                    # go to step3
+                    go_step3 = True
+                    break
+                else:
+                    continue
+
+        if not go_step3:
+            print '---------------------------------'
+            print test_attribute, ' is not superfluous.'
+            print '---------------------------------'
+            isSuperfluous = False
+            return isSuperfluous
+
+        # Step 3
+        test_attribute_key_set = [key for key in all_keys if key not in Ki_prime]
+
+        for key in test_attribute_key_set:
+            while isSuperfluous:
+                key_closure = compute_closure(key, Gi_prime)
+                if A <= key_closure:
+                    break
+                else:
+                    # next
+                    M = key_closure
+                    temp_set = M & A - test_attribute
+
+                    G_plus = compute_closure(temp_set, G)
+
+                    if A <= G_plus:
+                        Ki_prime = [key for key in all_keys if key in temp_set and key not in Ki_prime] + Ki_prime
+                        print Ki_prime
+                    else:
+                        isSuperfluous = False
+
+        # output
+        if isSuperfluous:
+            print '---------------------------------'
+            print test_attribute, ' is superfluous.'
+            print 'Ki_prime is', Ki_prime
+            print '---------------------------------'
+            return True
+        else:
+            print '---------------------------------'
+            print test_attribute, ' is not superfluous.'
+            print '---------------------------------'
+            return False
+

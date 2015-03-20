@@ -178,5 +178,26 @@ def get_all_attributes_in_relation(relation):
     return R
 
 
+def get_all_fds_from_merged_fds_list(merged_fds_list):
+    """
+    Get all the dependencies in merged_fds_list
+    :param merged_fds_list: The fds list include tuple (fds, J)
+    :return: The fds list
+    """
+    if not isinstance(merged_fds_list, list):
+        raise Exception('The input is not a list')
 
+    new_fds = FDList()
+
+    for fds in merged_fds_list:
+        if type(fds) is tuple:
+            for fd in fds[0].get_fds():
+                new_fds.add_fd(fd)
+            for fd in fds[1].get_fds():
+                new_fds.add_fd(fd)
+        else:
+            for fd in fds.get_fds():
+                new_fds.add_fd(fd)
+
+    return new_fds
 

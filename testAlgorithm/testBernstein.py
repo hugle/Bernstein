@@ -207,10 +207,42 @@ class TestBernstein(unittest.TestCase):
         test_relation = relation1
         test_attribute = set('C')
 
-        print '--------------------------------------------------------------------------------'
-        print 'For superfluous detection algorithm'
-        Bernstein.superfluous_attribute_detection_algorithm(relations, fds, test_relation, test_attribute)
-        print '--------------------------------------------------------------------------------'
+        self.assertTrue(Bernstein.superfluous_attribute_detection_algorithm(relations, fds, test_relation, test_attribute))
+
+    def test_superfluous_attribute_detection_algorithm2(self):
+        relation1 = {'key': [frozenset(['A'])], 'attr': set(['B', 'C'])}
+        relation2 = {'key': [frozenset(['B'])], 'attr': set(['C'])}
+
+        relations = [relation1, relation2]
+
+        # TODO
+        fds = FDList()
+        fds.add_fd(FD(frozenset(['A']), frozenset(['B', 'C'])))
+        fds.add_fd(FD(frozenset(['B']), frozenset(['C'])))
+
+        test_relation = relation1
+        test_attribute = set('A')
+
+        self.assertFalse(Bernstein.superfluous_attribute_detection_algorithm(relations, fds, test_relation, test_attribute))
+
+    def test_superfluous_attribute_detection_algorithm3(self):
+        relation1 = {'key': [frozenset(['A', 'B']), frozenset(['A', 'C']), frozenset(['A', 'D'])], 'attr': set(['E', 'F'])}
+        relation2 = {'key': [frozenset(['B'])], 'attr': set(['C'])}
+        relation3 = {'key': [frozenset(['C'])], 'attr': set(['D'])}
+
+        relations = [relation1, relation2, relation3]
+
+        fds = FDList()
+        fds.add_fd(FD(frozenset(['A', 'D']), frozenset(['B'])))
+        fds.add_fd(FD(frozenset(['B']), frozenset(['C'])))
+        fds.add_fd(FD(frozenset(['C']), frozenset(['D'])))
+        fds.add_fd(FD(frozenset(['A', 'B']), frozenset(['E'])))
+        fds.add_fd(FD(frozenset(['A', 'C']), frozenset(['F'])))
+
+        test_relation = relation1
+        test_attribute = set('C')
+
+        self.assertTrue(Bernstein.superfluous_attribute_detection_algorithm(relations, fds, test_relation, test_attribute))
 
 
     def test_build_lossy_table_2(self):
@@ -256,16 +288,5 @@ class TestBernstein(unittest.TestCase):
         fds.add_fd(FD(frozenset(['A', 'C']), frozenset(['E'])))
 
         algo.compute(fds)
-
-        for fds in algo.get_merged_fd_lists():
-            if isinstance(fds, tuple):
-                print fds[0]
-                print fds[1]
-            else:
-                print fds
-
-        # error in remove transitive fds
-        #for fds in algo.get_final_fds_lists():
-            #print fds
 
         print algo.get_print_relations_info(algo.get_relations())

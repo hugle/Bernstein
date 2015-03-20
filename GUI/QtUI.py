@@ -22,7 +22,7 @@ class Form(QWidget):
         main_layout.addLayout(button_layout, 0, 1)
 
         self.setLayout(main_layout)
-        self.setWindowTitle("Hello Qt")
+        self.setWindowTitle("Bernstein's Algorithm")
 
     def submit_contact(self):
         name = self.nameLine.text()
