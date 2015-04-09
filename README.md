@@ -1,4 +1,4 @@
-Berstein's Algorithm
+Bernstein's Algorithm
 ========================================
 This code implements **Bernsteins Synthesis Algorithm** in Python, 
 the dependency is *tabulate*(https://bitbucket.org/astanin/python-tabulate) 
