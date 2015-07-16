@@ -50,11 +50,5 @@ We will get 4 relations for the above functional dependencies :
 ~~~~~~~~~~~~~~~~~~~~~~~~
 The detection algorithm is described in the paper : (https://www.comp.nus.edu.sg/~lingtw/ltk.pdf)
 
-
-
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/hugle/bernstein/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
-
-
-
 [![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/hugle/bernstein/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
 
