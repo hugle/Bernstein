@@ -54,3 +54,7 @@ The detection algorithm is described in the paper : (https://www.comp.nus.edu.sg
 
 [![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/hugle/bernstein/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
 
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/hugle/bernstein/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
